@@ -139,6 +139,8 @@ class ThermoDoc(PropertyDoc):
             d["entry_types"] = [e.parameters.get("run_type", "Unknown")]
             d["entries"] = {e.parameters.get("run_type", ""): e}
 
+            d["origins"] = [{"task_id": e.data.task_id, "run_type": d["entries"]}]
+
             for k in ["last_updated"]:
                 if k in e.parameters:
                     d[k] = e.parameters[k]
