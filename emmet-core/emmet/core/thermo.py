@@ -139,7 +139,9 @@ class ThermoDoc(PropertyDoc):
             d["entry_types"] = [e.parameters.get("run_type", "Unknown")]
             d["entries"] = {e.parameters.get("run_type", ""): e}
 
-            d["origins"] = [{"task_id": e.data.task_id, "run_type": d["entries"]}]
+            d["origins"] = [
+                {"task_id": e.data.task_id, "run_type": d["entry_types"][0]}
+            ]
 
             for k in ["last_updated"]:
                 if k in e.parameters:
