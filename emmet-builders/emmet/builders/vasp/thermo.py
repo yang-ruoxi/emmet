@@ -160,7 +160,7 @@ class ThermoBuilder(Builder):
         )
         pd_entries = []
         for entry in entries:
-            material_entries[entry.entry_id][entry.data["run_type"]] = entry
+            material_entries[entry.data["material_id"]][entry.data["run_type"]] = entry
 
         if self.compatibility:
             with warnings.catch_warnings():
@@ -174,9 +174,10 @@ class ThermoBuilder(Builder):
 
         try:
             docs, pd = ThermoDoc.from_entries(pd_entries, deprecated=False)
-            for doc in docs:
-                doc.entries = material_entries[doc.material_id]
-                doc.entry_types = list(material_entries[doc.material_id].keys())
+
+            # for doc in docs:
+            #     doc.entries = material_entries[doc.material_id]
+            #     doc.entry_types = list(material_entries[doc.material_id].keys())
 
             pd_data = None
 
@@ -248,7 +249,7 @@ class ThermoBuilder(Builder):
 
     def get_entries(self, chemsys: str) -> List[Dict]:
         """
-        Gets a entries from the tasks collection for the corresponding chemical systems
+        Gets entries from the materials collection for the corresponding chemical systems
         Args:
             chemsys(str): a chemical system represented by string elements seperated by a dash (-)
         Returns:
@@ -275,6 +276,7 @@ class ThermoBuilder(Builder):
         new_q = dict(self.query)
         new_q["chemsys"] = {"$in": list(query_chemsys)}
         new_q["deprecated"] = False
+
         materials_docs = list(
             self.materials.query(
                 criteria=new_q, properties=["material_id", "entries", "deprecated"]
@@ -300,11 +302,11 @@ class ThermoBuilder(Builder):
             f"Got {len(materials_docs)} entries from DB for {len(query_chemsys)} sub-chemsys for {chemsys}"
         )
 
-        # Convert the entries into ComputedEntries and store
+        # Convert entries into ComputedEntries and store
         for doc in materials_docs:
             for r_type, entry_dict in doc.get("entries", {}).items():
                 entry_dict["data"]["oxidation_states"] = oxi_states_data.get(
-                    entry_dict["entry_id"], {}
+                    entry_dict["data"]["material_id"], {}
                 )
                 entry_dict["data"]["run_type"] = r_type
                 elsyms = sorted(set([el for el in entry_dict["composition"]]))
@@ -315,9 +317,7 @@ class ThermoBuilder(Builder):
 
         return all_entries
 
-    def get_updated_chemsys(
-        self,
-    ) -> Set:
+    def get_updated_chemsys(self,) -> Set:
         """Gets updated chemical system as defined by the updating of an existing material"""
 
         updated_mats = self.thermo.newer_in(self.materials, criteria=self.query)
